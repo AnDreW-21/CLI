@@ -1,4 +1,6 @@
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.util.Scanner;
 
@@ -70,14 +72,18 @@ public class Terminal {
     }
 
 
-    public void chooseCommandAction(){
+    public void chooseCommandAction() {
+        String output = "";
         switch (parser.getCommandName().toLowerCase()) {
+            case "exit" ->{
+                return;
+            }
             case "echo" -> {
-                String output = echo();
+                output = echo();
                 System.out.println(output);
             }
             case "pwd" -> {
-                String output = pwd();
+                output = pwd();
                 System.out.println(output);
             }
             case "cd" -> {
@@ -89,8 +95,24 @@ public class Terminal {
                 }
             }
             case "ls" -> {
-                String output = ls(parser.getArgs());
+                output = ls(parser.getArgs());
                 System.out.println(output);
+            }
+            default ->{
+                output = "Invalid Command";
+                System.out.println(output);
+            }
+        }
+        if (parser.toFile){
+            File out = new File(parser.outputFilePath);
+            try{
+                if (!out.exists()) out.createNewFile();
+                if (parser.appendToFile) output = Files.readString(out.toPath()) + output;
+                output += "\n";
+                Files.write(out.toPath(), output.getBytes());
+            }
+            catch (IOException e){
+                System.out.println(e.toString());
             }
         }
     }
@@ -104,7 +126,7 @@ public class Terminal {
         File temp = new File("");
         while (!command.equals("exit")){
             try{
-                System.out.print(terminal.currentPath.getAbsolutePath() + " > ");
+                System.out.print(terminal.currentPath.getAbsolutePath() + " : ");
                 command = scan.nextLine();
                 terminal.parser.parse(command);
                 temp = new File(terminal.currentPath.getAbsolutePath());
