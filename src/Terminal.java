@@ -45,10 +45,20 @@ public class Terminal {
         }
     }
 
-    public void ls(){
+    public void ls(String[] args){
         String[] paths = currentPath.list();
-        for (String path : paths){
-            System.out.println(path);
+        if (args.length == 0) {
+            for (String path : paths) {
+                System.out.println(path);
+            }
+        }
+        else if (args[0].equals("-r")){
+            for (int i = paths.length - 1; i >= 0; i--){
+                System.out.println(paths[i]);
+            }
+        }
+        else{
+            System.out.println("Invalid Arguments");
         }
     }
 
@@ -70,7 +80,7 @@ public class Terminal {
                     System.out.println("Invalid Path");
                 }
             }
-            case "ls" -> ls();
+            case "ls" -> ls(parser.getArgs());
         }
     }
 
