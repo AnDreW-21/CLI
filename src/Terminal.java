@@ -1,22 +1,22 @@
 import java.io.File;
 import java.nio.file.InvalidPathException;
-import java.util.Arrays;
 import java.util.Scanner;
 
 public class Terminal {
     Parser parser;
     File currentPath;
 
-    public void pwd(){
-        System.out.println(currentPath.getAbsolutePath());
+    public String pwd(){
+        return currentPath.getAbsolutePath();
     }
 
-    public void echo(){
+    public String echo(){
+        StringBuilder output = new StringBuilder();
         String[] args = parser.getArgs();
         for (String arg : args) {
-            System.out.print(arg + " ");
+            output.append(arg).append(" ");
         }
-        System.out.print("\n");
+        return output.toString();
     }
 
     public void cd(String[] args){
@@ -45,21 +45,23 @@ public class Terminal {
         }
     }
 
-    public void ls(String[] args){
+    public String ls(String[] args){
+        StringBuilder output = new StringBuilder();
         String[] paths = currentPath.list();
         if (args.length == 0) {
             for (String path : paths) {
-                System.out.println(path);
+               output.append(path).append("\n");
             }
         }
         else if (args[0].equals("-r")){
             for (int i = paths.length - 1; i >= 0; i--){
-                System.out.println(paths[i]);
+                output.append(paths[i]).append("\n");
             }
         }
         else{
-            System.out.println("Invalid Arguments");
+            return "Invalid Arguments";
         }
+        return output.toString();
     }
 
 
@@ -70,8 +72,14 @@ public class Terminal {
 
     public void chooseCommandAction(){
         switch (parser.getCommandName().toLowerCase()) {
-            case "echo" -> echo();
-            case "pwd" -> pwd();
+            case "echo" -> {
+                String output = echo();
+                System.out.println(output);
+            }
+            case "pwd" -> {
+                String output = pwd();
+                System.out.println(output);
+            }
             case "cd" -> {
                 try {
                     cd(parser.getArgs());
@@ -80,7 +88,10 @@ public class Terminal {
                     System.out.println("Invalid Path");
                 }
             }
-            case "ls" -> ls(parser.getArgs());
+            case "ls" -> {
+                String output = ls(parser.getArgs());
+                System.out.println(output);
+            }
         }
     }
 
