@@ -107,6 +107,44 @@ public class Terminal {
         }
         return output.toString();
     }
+    public void mkdir(String[] args) {
+        int count = 0;
+        if (args[0].contains("\\")) {
+            for (String arg : args) {
+                File f = new File(arg);
+                if (!f.mkdir()) {
+                    break;     //not Modified
+                }
+            }
+        } else {
+            for (String arg : args) {
+                File f = new File(currentPath + "\\" + arg);
+                if (f.mkdir()) {
+                    break;    //not Modified
+                }
+            }
+        }
+
+
+    }
+    public void rmdir(String[] args) {
+        String[] paths = currentPath.list();
+        if (args[0].equals("*")) {
+            for (String path : paths) {
+                File file = new File(path);
+                if (file.isDirectory()) {
+                    if (file.list().length == 0)
+                        file.delete();
+                }
+            }
+        } else {
+            File file = new File(args[0]);
+            if (file.isDirectory()) {
+                if (file.list().length == 0)
+                    file.delete();
+            }
+        }
+    }
 
 
     Terminal(Parser parser){
@@ -140,6 +178,11 @@ public class Terminal {
                 output = ls(parser.getArgs());
                 System.out.println(output);
             }
+            case "mkdir" -> {
+                mkdir(parser.getArgs());
+            }
+
+            case "rmdir" -> rmdir(parser.getArgs());
             default ->{
                 output = "Invalid Command";
                 System.out.println(output);
