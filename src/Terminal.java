@@ -30,9 +30,6 @@ class Parser {
             outputFilePath = input.split(">")[1];
             outputFilePath = outputFilePath.strip();
         }
-
-
-
         return true;
     }
 
@@ -111,8 +108,8 @@ public class Terminal {
         int count = 0;
         if (args[0].contains("\\")) {
             for (String arg : args) {
-                File f = new File(arg);
-                if (!f.mkdir()) {
+                File file = new File(arg);
+                if (!file.mkdir()) {
                     break;     //not Modified
                 }
             }
@@ -145,6 +142,10 @@ public class Terminal {
             }
         }
     }
+     public void touch(String[] args) throws IOException {
+         File file = new File(args[0]);
+         file.createNewFile();
+    }
 
 
     Terminal(Parser parser){
@@ -152,7 +153,7 @@ public class Terminal {
     }
 
 
-    public void chooseCommandAction() {
+    public void chooseCommandAction() throws IOException {
         String output = "";
         switch (parser.getCommandName().toLowerCase()) {
             case "exit" ->{
@@ -183,6 +184,7 @@ public class Terminal {
             }
 
             case "rmdir" -> rmdir(parser.getArgs());
+            case "touch" ->touch(parser.args);
             default ->{
                 output = "Invalid Command";
                 System.out.println(output);
@@ -217,7 +219,7 @@ public class Terminal {
                 temp = new File(terminal.currentPath.getAbsolutePath());
                 terminal.chooseCommandAction();
             }
-            catch (NullPointerException e){
+            catch (NullPointerException | IOException e){
                 System.out.println("Invalid Path");
                 terminal.currentPath = new File(temp.getAbsolutePath());
             }
