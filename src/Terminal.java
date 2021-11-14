@@ -112,23 +112,28 @@ public class Terminal {
     public String ls(String[] args){
         StringBuilder output = new StringBuilder();
         String[] paths = currentPath.list();
-        if (args.length == 0) {
+        boolean flag = true;
+        for (String arg : args){
+            flag = !arg.equals("-r");
+        }
+        if (flag) {
             for (String path : paths) {
                output.append(path).append("\n");
             }
+            return output.toString();
         }
-        else if (args[0].equals("-r")){
-            for (int i = paths.length - 1; i >= 0; i--){
-                output.append(paths[i]).append("\n");
+        for (String arg : args){
+            if (arg.equals("-r")){
+                for (int i = paths.length - 1; i >= 0; i--){
+                    output.append(paths[i]).append("\n");
+                }
+                return output.toString();
             }
         }
-        else{
-            return "Invalid Arguments";
-        }
-        return output.toString();
+        return "Invalid Arguments";
     }
 
-    public void cr(String[] args) throws IOException {
+    public void cp(String[] args) throws IOException {
         if(!args[0].equals("-r")){
             InputStream inputStream ;
             OutputStream outputStream ;
@@ -143,10 +148,42 @@ public class Terminal {
             outputStream.close();
         }
     }
+
+    public void rmdir(String[] args) {
+        String[] paths = currentPath.list();
+        if (args[0].equals("*")) {
+            for (String path : paths) {
+                File file = new File(path);
+                if (!file.isAbsolute()) file = new File(currentPath.getAbsolutePath() + File.separator + path);
+                if (file.isDirectory()) {
+                    if (file.list().length == 0)
+                        file.delete();
+                }
+            }
+        } else {
+            File file = new File(args[0]);
+            if (!file.isAbsolute()) file = new File(currentPath.getAbsolutePath() + File.separator + args[0]);
+            if (file.isDirectory()) {
+                if (file.list().length == 0)
+                    file.delete();
+            }
+        }
+    }
+
+    public boolean touch(String[] args) throws IOException {
+        File file = new File(args[0]);
+        if (file.isAbsolute()){
+            return file.createNewFile();
+        }
+        file = new File(currentPath.getAbsolutePath() + File.separator + args[0]);
+        return file.createNewFile();
+    }
+
     public boolean rm(String[] args){
-        File file= new File(currentPath+"\\"+args[0]);
+        File file= new File(currentPath + File.separator + args[0]);
         return file.delete();
     }
+
     Terminal(Parser parser){
         this.parser = parser;
     }
@@ -172,6 +209,29 @@ public class Terminal {
                 }
                 catch (InvalidPathException e){
                     System.out.println("Invalid Path");
+                }
+            }
+            case "rm" ->{
+                rm(parser.getArgs());
+            }
+            case "touch" -> {
+                try{
+                    touch(parser.getArgs());
+                }catch (IOException ignored){
+                    output = "Invalid Arguments";
+                    System.out.println(output);
+                }
+            }
+            case "rmdir" -> {
+                rmdir(parser.getArgs());
+            }
+            case "cp" -> {
+                try {
+                    cp(parser.getArgs());
+                }
+                catch (IOException ignored){
+                    output = "Invalid Arguements";
+                    System.out.println(output);
                 }
             }
             case "ls" -> {
