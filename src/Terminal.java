@@ -1,9 +1,9 @@
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.util.Scanner;
 import java.util.Arrays;
+
 
 
 class Parser {
@@ -46,15 +46,16 @@ class Parser {
 public class Terminal {
     Parser parser;
     File currentPath;
-
     public String pwd(){
         return currentPath.getAbsolutePath();
     }
-
     public String echo(){
         StringBuilder output = new StringBuilder();
         String[] args = parser.getArgs();
         for (String arg : args) {
+            if(arg.equals(">") || arg.equals(">>")){
+                break;
+            }
             output.append(arg).append(" ");
         }
         return output.toString();
@@ -89,7 +90,7 @@ public class Terminal {
     public String ls(String[] args){
         StringBuilder output = new StringBuilder();
         String[] paths = currentPath.list();
-        if (args.length == 0) {
+        if (args[0].equals(">") || args[0].equals(">>")) {
             for (String path : paths) {
                output.append(path).append("\n");
             }
@@ -100,29 +101,29 @@ public class Terminal {
             }
         }
         else{
+            System.out.println(args[0]);
             return "Invalid Arguments";
         }
         return output.toString();
     }
-    public void mkdir(String[] args) {
-        int count = 0;
+    public boolean mkdir(String[] args) {
+        int count=0;
         if (args[0].contains("\\")) {
             for (String arg : args) {
                 File file = new File(arg);
-                if (!file.mkdir()) {
-                    break;     //not Modified
+                if (file.mkdir()) {
+                    count++;
                 }
             }
         } else {
             for (String arg : args) {
                 File f = new File(currentPath + "\\" + arg);
                 if (f.mkdir()) {
-                    break;    //not Modified
+                    count++;
                 }
             }
         }
-
-
+        return (count==args.length);
     }
     public void rmdir(String[] args) {
         String[] paths = currentPath.list();
@@ -142,17 +143,33 @@ public class Terminal {
             }
         }
     }
-     public void touch(String[] args) throws IOException {
+     public boolean touch(String[] args) throws IOException {
          File file = new File(args[0]);
-         file.createNewFile();
+         return file.createNewFile();
     }
 
-
+    public void cr(String[] args) throws IOException {
+        if(!args[0].equals("-r")){
+            InputStream inputStream ;
+            OutputStream outputStream ;
+            inputStream = new FileInputStream(currentPath+"\\"+args[1]);
+            outputStream = new FileOutputStream(currentPath+"\\"+args[2]);
+            byte[] buffer = new byte[1024];
+            int size;
+            while ((size = inputStream.read(buffer)) > 0) {
+                outputStream.write(buffer, 0, size);
+            }
+            inputStream.close();
+            outputStream.close();
+        }
+    }
+    public boolean rm(String[] args){
+        File file= new File(currentPath+"\\"+args[0]);
+        return file.delete();
+    }
     Terminal(Parser parser){
         this.parser = parser;
     }
-
-
     public void chooseCommandAction() throws IOException {
         String output = "";
         switch (parser.getCommandName().toLowerCase()) {
@@ -161,11 +178,13 @@ public class Terminal {
             }
             case "echo" -> {
                 output = echo();
-                System.out.println(output);
+                if(!parser.toFile)
+                    System.out.println(output);
             }
             case "pwd" -> {
                 output = pwd();
-                System.out.println(output);
+                if(!parser.toFile)
+                    System.out.println(output);
             }
             case "cd" -> {
                 try {
@@ -177,14 +196,27 @@ public class Terminal {
             }
             case "ls" -> {
                 output = ls(parser.getArgs());
-                System.out.println(output);
+                if(!parser.toFile)
+                    System.out.println(output);
             }
             case "mkdir" -> {
-                mkdir(parser.getArgs());
+                if (!mkdir(parser.getArgs()))
+                    System.out.println("Error occurred");
+            }
+            case "rm" ->{
+                if(!rm(parser.args))
+                    System.out.println("Invalid Path");
             }
 
             case "rmdir" -> rmdir(parser.getArgs());
-            case "touch" ->touch(parser.args);
+            case "touch" ->{
+                if (!touch(parser.args)){
+                    System.out.println("Error occurred");
+                }
+            }
+
+            case "cr" ->cr(parser.args);
+
             default ->{
                 output = "Invalid Command";
                 System.out.println(output);
