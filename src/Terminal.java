@@ -204,22 +204,28 @@ public class Terminal {
     }
 
     public String cat(String[] args) throws IOException{
-
-        File temp1 = new File(args[0]);
+        File temp1, temp2 = new File("");
+        boolean foundSecond = false;
+        temp1 = new File(args[0]);
         if (!temp1.isAbsolute()) temp1 = new File(currentPath + File.separator + args[0]);
 
-        File temp2 = new File(args[1]);
-        if (!temp2.isAbsolute()) temp2 = new File(currentPath + File.separator + args[1]);
+        try{
+            temp2 = new File(args[1]);
+            if (!temp2.isAbsolute()) temp2 = new File(currentPath + File.separator + args[1]);
+            foundSecond = true;
+        }catch (ArrayIndexOutOfBoundsException ignored){}
 
         StringBuilder rtn = new StringBuilder();
         byte[] temp = Files.readAllBytes(temp1.toPath());
         for (byte c : temp){
             rtn.append((char) c);
         }
-        rtn.append("\n");
-        temp = Files.readAllBytes(temp2.toPath());
-        for (byte c : temp){
-            rtn.append((char) c);
+        if (foundSecond){
+            rtn.append("\n");
+            temp = Files.readAllBytes(temp2.toPath());
+            for (byte c : temp){
+                rtn.append((char) c);
+            }
         }
         return rtn.toString();
     }
@@ -297,6 +303,7 @@ public class Terminal {
         }
         if (parser.toFile) {
             File out = new File(parser.outputFilePath);
+            if (!out.isAbsolute()) out = new File(currentPath + File.separator + parser.outputFilePath);
             try {
                 if (!out.exists()) out.createNewFile();
                 if (parser.appendToFile) output = Files.readString(out.toPath()) + output;
