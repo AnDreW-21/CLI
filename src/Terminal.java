@@ -106,11 +106,14 @@ public class Terminal {
             if (arg.equals("-r")) flag = true;
         }
         if (!flag) {
+            if(args.length==0 || (args[0].equals(">") || args[0].equals(">>") & (args.length>1))){
                 for (String path : paths) {
                     output.append(path).append("\n");
                 }
                 return output.toString();
             }
+            return "Invalid Arguments";
+        }
         else {
             for (int i = paths.length - 1; i >= 0; i--) {
                 output.append(paths[i]).append("\n");
