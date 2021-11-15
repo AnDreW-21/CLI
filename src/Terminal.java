@@ -106,11 +106,11 @@ public class Terminal {
             if (arg.equals("-r")) flag = true;
         }
         if (!flag) {
-            for (String path : paths) {
-                output.append(path).append("\n");
+                for (String path : paths) {
+                    output.append(path).append("\n");
+                }
+                return output.toString();
             }
-            return output.toString();
-        }
         else {
             for (int i = paths.length - 1; i >= 0; i--) {
                 output.append(paths[i]).append("\n");
@@ -152,6 +152,9 @@ public class Terminal {
     public String rmdir(String[] args) {
         String output = "";
         String[] paths = currentPath.list();
+        if(args.length==0){
+            return "Invalid Arguments";
+        }
         if (args[0].equals("*")) {
             for (String path : paths) {
                 File file = new File(path);
@@ -171,10 +174,9 @@ public class Terminal {
                         file.delete();
                 }
                 return output;
-            } else
-                return "Invalid Arguments";
-
+            }
         }
+        return "Invalid Arguments";
 
     }
 
@@ -204,6 +206,9 @@ public class Terminal {
     }
 
     public String cat(String[] args) throws IOException{
+        if(args.length==0){
+            return "Invalid Arguments";
+        }
         File temp1, temp2 = new File("");
         boolean foundSecond = false;
         temp1 = new File(args[0]);
