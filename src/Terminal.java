@@ -4,24 +4,18 @@ import java.nio.file.InvalidPathException;
 import java.util.Scanner;
 import java.util.Arrays;
 
-
-
 class Parser {
-
     String commandName;
     String[] args;
     boolean toFile;
     boolean appendToFile;
     String outputFilePath;
-
-
     public boolean parse(String input){
         String[] temp = input.split(" ");
         commandName = temp[0];
         args = Arrays.copyOfRange(temp, 1, temp.length);
         toFile = input.contains(">");
         appendToFile = input.contains(">>");
-
         if (appendToFile){
             outputFilePath = input.split(">>")[1];
             outputFilePath = outputFilePath.strip();
@@ -30,16 +24,11 @@ class Parser {
             outputFilePath = input.split(">")[1];
             outputFilePath = outputFilePath.strip();
         }
-
-
-
         return true;
     }
-
     public String getCommandName(){
         return commandName;
     }
-
     public String[] getArgs(){
         return args;
     }
@@ -49,11 +38,9 @@ class Parser {
 public class Terminal {
     Parser parser;
     File currentPath;
-
     public String pwd(){
         return currentPath.getAbsolutePath();
     }
-
     public String echo(){
         StringBuilder output = new StringBuilder();
         String[] args = parser.getArgs();
@@ -65,7 +52,6 @@ public class Terminal {
         }
         return output.toString();
     }
-
     public void cd(String[] args){
         File temp = new File(currentPath.getAbsolutePath());
         if (args.length == 0){
@@ -112,11 +98,7 @@ public class Terminal {
     public String ls(String[] args){
         StringBuilder output = new StringBuilder();
         String[] paths = currentPath.list();
-        boolean flag = true;
-        for (String arg : args){
-            flag = !arg.equals("-r");
-        }
-        if (flag) {
+        if (args.length==0) {
             for (String path : paths) {
                output.append(path).append("\n");
             }
@@ -134,11 +116,14 @@ public class Terminal {
     }
 
     public void cp(String[] args) throws IOException {
+        if((args.length == 0)){
+            throw new IOException();
+        }
         if(!args[0].equals("-r")){
             InputStream inputStream ;
             OutputStream outputStream ;
-            inputStream = new FileInputStream(currentPath+"\\"+args[1]);
-            outputStream = new FileOutputStream(currentPath+"\\"+args[2]);
+            inputStream = new FileInputStream(currentPath+"\\"+args[0]);
+            outputStream = new FileOutputStream(currentPath+"\\"+args[1]);
             byte[] buffer = new byte[1024];
             int size;
             while ((size = inputStream.read(buffer)) > 0) {
@@ -147,9 +132,11 @@ public class Terminal {
             inputStream.close();
             outputStream.close();
         }
+
     }
 
-    public void rmdir(String[] args) {
+    public String rmdir(String[] args)  {
+        String output="";
         String[] paths = currentPath.list();
         if (args[0].equals("*")) {
             for (String path : paths) {
@@ -160,17 +147,27 @@ public class Terminal {
                         file.delete();
                 }
             }
+            return output;
         } else {
             File file = new File(args[0]);
-            if (!file.isAbsolute()) file = new File(currentPath.getAbsolutePath() + File.separator + args[0]);
-            if (file.isDirectory()) {
-                if (file.list().length == 0)
-                    file.delete();
-            }
-        }
-    }
+            if (file.exists()){
+                if (!file.isAbsolute()) file = new File(currentPath.getAbsolutePath() + File.separator + args[0]);
+                if (file.isDirectory()) {
+                    if (file.list().length == 0)
+                        file.delete();
+                }
+                return output;
+            }else
+                return "Invalid Arguments";
 
+        }
+
+    }
     public boolean touch(String[] args) throws IOException {
+        if(args.length==0){
+            throw new IOException();
+        }
+
         File file = new File(args[0]);
         if (file.isAbsolute()){
             return file.createNewFile();
@@ -180,14 +177,20 @@ public class Terminal {
     }
 
     public boolean rm(String[] args){
+        if(args.length==0){
+            return false;
+        }
         File file= new File(currentPath + File.separator + args[0]);
-        return file.delete();
+        if(file.exists()){
+            return file.delete();
+        }else {
+           return false;
+        }
     }
 
     Terminal(Parser parser){
         this.parser = parser;
     }
-
 
     public void chooseCommandAction() {
         String output = "";
@@ -212,7 +215,9 @@ public class Terminal {
                 }
             }
             case "rm" ->{
-                rm(parser.getArgs());
+                if(!rm(parser.getArgs())){
+                    System.out.println("Invalid Arguments");
+                }
             }
             case "touch" -> {
                 try{
@@ -223,11 +228,12 @@ public class Terminal {
                 }
             }
             case "rmdir" -> {
-                rmdir(parser.getArgs());
+                output=rmdir(parser.getArgs());
+                System.out.println(output);
             }
             case "cp" -> {
                 try {
-                    cp(parser.getArgs());
+                   cp(parser.getArgs());
                 }
                 catch (IOException ignored){
                     output = "Invalid Arguements";
@@ -236,6 +242,10 @@ public class Terminal {
             }
             case "ls" -> {
                 output = ls(parser.getArgs());
+                System.out.println(output);
+            }
+            case "mkdir" ->{
+                output = mkdir(parser.getArgs());
                 System.out.println(output);
             }
             default ->{
